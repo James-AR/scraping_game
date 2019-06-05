@@ -2,35 +2,20 @@ import requests
 from bs4 import BeautifulSoup
 from random import choice
 from time import sleep
+from csv import DictReader
 
 BASE_URL = "http://quotes.toscrape.com/"
 
-def scrape_quotes():
-    quotes_list = []
-    url = "/page/1"
-    while url:
-        response = requests.get(f"{BASE_URL}{url}")
-        print(f"scraping {BASE_URL}{url}")
-        soup = BeautifulSoup(response.text, 'html.parser')
-        quotes = soup.find_all(class_="quote")
-        
-        for quote in quotes:
-            quotes_list.append({
-                "text": quote.find(class_="text").get_text(),
-                "author": quote.find(class_="author").get_text(),
-                "bio-link": quote.find("a")["href"]
-            })
-        next_btn = soup.find(class_="next")
-        url = next_btn.find("a")["href"] if next_btn else None
-        sleep(2)
-    return quotes_list
+def read_quotes(filename):
+    with open(filename, "r", encoding='utf-8') as file:
+        csv_reader = DictReader(file)
+        return list(csv_reader)
 
 def start_game(quotes):
     quote = choice(quotes)
     remaining_guesses = 4
     guess = ""
     print(quote["text"])
-    print(quote["author"])
 
     while guess.lower() != quote["author"].lower() and remaining_guesses > 0:
         guess = input(f"Who said this quote? You have {remaining_guesses} guesses remaining.\n")
@@ -54,11 +39,11 @@ def start_game(quotes):
 
     again= ''
     while again.lower() not in ['yes', 'y', 'no', 'n']:
-        again = input(f"Would you like to play again? y/n")
+        again = input(f"Would you like to play again? y/n\n")
     if again.lower() in ('yes', 'y'):
         return start_game(quotes)
     else:
         print('Okay!')
 
-quotes = scrape_quotes()
+quotes = read_quotes("quotes.csv")
 start_game(quotes)
